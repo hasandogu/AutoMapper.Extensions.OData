@@ -149,6 +149,13 @@ namespace AutoMapper.OData.EFCore.Tests.Data
         public Dictionary<string, object> ProductProperties { get; set; }
     }
 
+    public class ProductWithStatus
+    {
+        public Product Product { get; set; }
+
+        public bool Status { get; set; }
+    }
+
     [Flags]
     public enum FlagsEnum
     {

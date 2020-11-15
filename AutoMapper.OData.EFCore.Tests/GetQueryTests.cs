@@ -483,8 +483,56 @@ namespace AutoMapper.OData.EFCore.Tests
                             AlternateAddresses = new Address[0],
                             SupplierAddress = new Address { City = "C" }
                         }
-                    }
+                    },
+                    Product = new Product
+                    {
+                        ProductID = 6,
+                        ProductName = "ProductSix",
+                        AlternateAddresses = new Address[]
+                        {
+                            new Address { AddressID = 6, City = "CitySix" },
+                            new Address { AddressID = 7, City = "CitySeven"  },
+                        },
+                        SupplierAddress = new Address { City = "D" }
+                    },
                 }
+            }.AsQueryable();
+
+        private IQueryable<Product> GetProducts()
+         => new Product[]
+            {
+                new Product
+                {
+                    ProductID = 1,
+                    ProductName = "ProductOne",
+                    AlternateAddresses = new Address[]
+                    {
+                        new Address { AddressID = 1, City = "CityOne" },
+                        new Address { AddressID = 2, City = "CityTwo"  },
+                    },
+                    NotFilterableAlternateAddresses = new Address[]
+                    {
+                        new Address { AddressID = 3, City = "CityThree" },
+                        new Address { AddressID = 4, City = "CityFour"  },
+                    },
+                    SupplierAddress = new Address { City = "A" }
+                },
+                new Product
+                {
+                    ProductID = 2,
+                    ProductName = "ProductTwo",
+                    AlternateAddresses = new Address[]
+                    {
+                        new Address { AddressID = 5, City = "CityFive" },
+                        new Address { AddressID = 6, City = "CitySix"  },
+                    },
+                    NotFilterableAlternateAddresses = new Address[]
+                    {
+                        new Address { AddressID = 7, City = "CitySeven" },
+                        new Address { AddressID = 8, City = "CityEight"  },
+                    },
+                    SupplierAddress = new Address { City = "B" }
+                },
             }.AsQueryable();
 
         [Fact]
@@ -623,6 +671,99 @@ namespace AutoMapper.OData.EFCore.Tests
                 Assert.Equal("CityTwo", collection.First().Products.First().AlternateAddresses.First().City);
             }
         }
+
+        [Fact]
+        public async void FilteringOnRoot_WithStatusFromExternal()
+        {
+            var productsWithStatus = GetProducts().Select(p => new ProductWithStatus
+            {
+                Product = p,
+                Status = true
+            }); 
+
+            Test
+            (
+                await Get<ProductModel, ProductWithStatus>
+                (
+                    "/ProductModel?$top=1",
+                    productsWithStatus
+                )
+            );
+
+            static void Test(ICollection<ProductModel> collection)
+            {
+                Assert.Equal(1, collection.Count);
+                Assert.Equal("ProductOne", collection.First().ProductName);
+                Assert.True(collection.First().Status);
+            }
+        }
+
+
+        [Fact]
+        public async void FilteringOnRoot_WithStatusFromExternal_FilterNested()
+        {
+            var productsWithStatus = GetProducts().Select(p => new ProductWithStatus
+            {
+                Product = p,
+                Status = true
+            });
+
+            Test
+            (
+                await Get<ProductModel, ProductWithStatus>
+                (
+                    "/ProductModel?$top=1&$filter=SupplierAddress/City eq 'B'",
+                    productsWithStatus
+                )
+            );
+
+            static void Test(ICollection<ProductModel> collection)
+            {
+                Assert.Equal(1, collection.Count);
+                Assert.Equal("ProductTwo", collection.First().ProductName);
+                Assert.True(collection.First().Status);
+            }
+        }
+
+        [Fact]
+        public async void FilteringOnRoot_WithStatusFromExternal_FilterParameter()
+        {
+            int productParameterValue = new Random().Next();
+            var parameters = new
+            {
+                productParameter = productParameterValue
+            };
+
+            var productsWithStatus = GetProducts().Select(p => new ProductWithStatus
+            {
+                Product = p,
+                Status = true
+            });
+
+            Test
+            (
+                await Get<ProductModel, ProductWithStatus>
+                (
+                    "/ProductModel?$top=1&$filter=parameter eq " + productParameterValue,
+                    productsWithStatus,
+                    null,
+                    new QuerySettings
+                    {
+                        ProjectionSettings = new ProjectionSettings { Parameters = parameters },
+                        HandleNullPropagation = HandleNullPropagationOption.False
+                    }
+                )
+            );;
+
+            void Test(ICollection<ProductModel> collection)
+            {
+                Assert.Equal(1, collection.Count);
+                Assert.Equal("ProductOne", collection.First().ProductName);
+                Assert.True(collection.First().Status);
+                Assert.Equal(productParameterValue, collection.First().Parameter);
+            }
+        }
+
 
         private async Task<ICollection<TModel>> Get<TModel, TData>(string query, IQueryable<TData> dataQueryable, ODataQueryOptions<TModel> options = null, QuerySettings querySettings = null) where TModel : class where TData : class
         {

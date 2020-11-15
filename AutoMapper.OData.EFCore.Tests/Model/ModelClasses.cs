@@ -58,6 +58,10 @@ namespace AutoMapper.OData.EFCore.Tests.Model
         public AddressModel[] AlternateAddresses { get; set; }
         [NotFilterable]
         public AddressModel[] NotFilterableAlternateAddresses { get; set; }
+
+        public bool Status { get; set; }
+
+        public int Parameter { get; set; }
     }
 
     public class CategoryModel

@@ -11,6 +11,8 @@ namespace AutoMapper.OData.EFCore.Tests.Mappings
     {
         public ObjectMappings()
         {
+            int productParameter = 0;
+
             CreateMap<Address, AddressModel>()
                 .ForAllMembers(o => o.ExplicitExpansion());
             CreateMap<Category, CategoryModel>()
@@ -20,11 +22,18 @@ namespace AutoMapper.OData.EFCore.Tests.Mappings
             CreateMap<DerivedCategory, DerivedCategoryModel>()
                 .ForAllMembers(o => o.ExplicitExpansion());
             CreateMap<DerivedProduct, DerivedProductModel>()
+                .ForMember(o => o.Status, opt => opt.Ignore())
                 .ForAllMembers(o => o.ExplicitExpansion());
             CreateMap<DynamicProduct, DynamicProductModel>()
+                .ForMember(o => o.Status, opt => opt.Ignore())
                 .ForAllMembers(o => o.ExplicitExpansion());
             CreateMap<Product, ProductModel>()
+                .ForMember(o => o.Status, opt => opt.Ignore())
+                .ForMember(d => d.Parameter, o => o.MapFrom(s => productParameter))
                 .ForAllMembers(o => o.ExplicitExpansion());
+            CreateMap<ProductWithStatus, ProductModel>()
+                .IncludeMembers(o => o.Product);
+//                .ForAllMembers(o => o.ExplicitExpansion());
         }
     }
 }
