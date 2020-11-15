@@ -673,7 +673,7 @@ namespace AutoMapper.OData.EFCore.Tests
         }
 
         [Fact]
-        public async void FilteringOnRoot_WithStatusFromExternal()
+        public async void FilteringOnRoot_WithStatusFromExternal_WithTop()
         {
             var productsWithStatus = GetProducts().Select(p => new ProductWithStatus
             {
@@ -694,6 +694,33 @@ namespace AutoMapper.OData.EFCore.Tests
             {
                 Assert.Equal(1, collection.Count);
                 Assert.Equal("ProductOne", collection.First().ProductName);
+                Assert.True(collection.First().Status);
+            }
+        }
+
+
+        [Fact]
+        public async void FilteringOnRoot_WithStatusFromExternal()
+        {
+            var productsWithStatus = GetProducts().Select(p => new ProductWithStatus
+            {
+                Product = p,
+                Status = true
+            });
+
+            Test
+            (
+                await Get<ProductModel, ProductWithStatus>
+                (
+                    "/ProductModel?$filter=productId eq 2",
+                    productsWithStatus
+                )
+            );
+
+            static void Test(ICollection<ProductModel> collection)
+            {
+                Assert.Equal(1, collection.Count);
+                Assert.Equal("ProductTwo", collection.First().ProductName);
                 Assert.True(collection.First().Status);
             }
         }
