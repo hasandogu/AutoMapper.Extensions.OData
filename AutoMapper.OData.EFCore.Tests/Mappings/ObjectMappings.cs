@@ -23,9 +23,11 @@ namespace AutoMapper.OData.EFCore.Tests.Mappings
                 .ForAllMembers(o => o.ExplicitExpansion());
             CreateMap<DerivedProduct, DerivedProductModel>()
                 .ForMember(o => o.Status, opt => opt.Ignore())
+                .ForMember(d => d.Parameter, o => o.MapFrom(s => productParameter))
                 .ForAllMembers(o => o.ExplicitExpansion());
             CreateMap<DynamicProduct, DynamicProductModel>()
                 .ForMember(o => o.Status, opt => opt.Ignore())
+                .ForMember(d => d.Parameter, o => o.MapFrom(s => productParameter))
                 .ForAllMembers(o => o.ExplicitExpansion());
             CreateMap<Product, ProductModel>()
                 .ForMember(o => o.Status, opt => opt.Ignore())
@@ -33,7 +35,7 @@ namespace AutoMapper.OData.EFCore.Tests.Mappings
                 .ForAllMembers(o => o.ExplicitExpansion());
             CreateMap<ProductWithStatus, ProductModel>()
                 .IncludeMembers(o => o.Product);
-//                .ForAllMembers(o => o.ExplicitExpansion());
+//                .ForAllMembers(o => o.ExplicitExpansion()); // If I enable this IsConfigurationValid test fails
         }
     }
 }
